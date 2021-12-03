@@ -1,4 +1,4 @@
-const { parseInput } = require('../util/parseInput');
+const { parseInput } = require('../util');
 const [filename = 0] = process.argv.slice(2);
 const inputList = parseInput(filename).map(num => parseInt(num, 10));
 const BUFFER_SIZE = 3;
