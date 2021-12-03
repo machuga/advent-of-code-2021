@@ -1,11 +1,11 @@
 const { parseInput } = require('../util/parseInput');
-const [filename = 'sample-input.txt'] = process.argv.slice(2);
+const [filename = 0] = process.argv.slice(2);
 const inputList = parseInput(filename).map(num => parseInt(num, 10));
 const BUFFER_SIZE = 3;
 
 const part1 = () => {
   const count = inputList.reduce((acc, e, index) => {
-    if (index === 0 || e <= inputList[index-1]) {
+    if (index === 0 || e <= inputList[index - 1]) {
       return acc;
     }
 
