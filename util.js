@@ -6,6 +6,10 @@ module.exports.parseInput = (filename = 0) =>
 module.exports.parseRawInput = (filename = 0) =>
   readFileSync(filename).toString();
 
+module.exports.toInt = (str) => parseInt(str, 10);
+
+module.exports.split = (separator) => (str) => str.split(separator);
+
 module.exports.pipe = (fns) => (x) => fns.reduce((v, f) => f(v), x);
 
 module.exports.map = (fn) => (arr) => arr.map(fn);
