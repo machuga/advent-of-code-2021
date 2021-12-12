@@ -18,6 +18,8 @@ module.exports.reduce = (fn, initial = []) => (arr) => arr.reduce(fn, initial);
 
 module.exports.transpose = (array) => array[0].map((_, colIndex) => array.map(row => row[colIndex]));
 
+module.exports.zip = (a, b) => a.map((k, i) => [k, b[i]]);
+
 module.exports.tap = (str) => (value) => {
   console.log(str, value);
   return value;
