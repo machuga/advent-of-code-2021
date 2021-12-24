@@ -12,7 +12,11 @@ module.exports.split = (separator) => (str) => str.split(separator);
 
 module.exports.pipe = (fns) => (x) => fns.reduce((v, f) => f(v), x);
 
+module.exports.flatMap = (fn) => (arr) => arr.flatMap(fn);
+
 module.exports.map = (fn) => (arr) => arr.map(fn);
+
+module.exports.filter = (fn) => (arr) => arr.filter(fn);
 
 module.exports.reduce = (fn, initial = []) => (arr) => arr.reduce(fn, initial);
 
