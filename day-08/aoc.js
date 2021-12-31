@@ -170,19 +170,27 @@ const mapSignalsToSegments = (rawSignals) => {
   // Step 6: Given we know a:2, b:5, c:6, d:0, e:1, f:3, we can infer g:4
   // We now know all values
 
+  const unique = (arr) => Array.from(new Set(arr));
+
+  const findSignalOfLength = (length) =>
+    signals.find(signal => signal.length === 2);
   const visualOne = signals.find(signal => signal.length === 2);
   const visualSeven = signals.find(signal => signal.length === 3);
   table[visualSeven.find(el => !visualOne.includes(el))] = 0;
   const visualFour = signals.find(signal => signal.length === 4);
   const diff = visualFour.filter(el => !visualSeven.includes(el));
+
   const visualThree = pipe([
     filter(signal => signal.length === 5),
     (candidates) => {
-      const potentialCombos = diff.map(segment => sort(visualSeven.concat(segment)));
+      const potentialCombos = diff.map(segment => sort(unique(visualSeven.concat(segment))));
 
+      console.log("The combos are", potentialCombos);
+      console.log("The thing", candidates.find(candidate => potentialCombos.find(potential => potential.every(el => candidate.includes(el)))));
       return candidates.find(candidate => potentialCombos.find(potential => potential.every(el => candidate.includes(el))));
     },
   ])(signals);
+
   visualTable[3] = visualThree.join('');
   table[visualThree.find(segment => !visualFour.includes(segment) && !visualSeven.includes(segment))] = 6;
   const intendedSegment = visualFour.find(segment => !visualThree.includes(segment));
@@ -193,11 +201,8 @@ const mapSignalsToSegments = (rawSignals) => {
   visualTable[5] = visualFive.join('');
   const unknownKey = visualFive.find(segment => !allKnown.includes(segment));
   table[unknownKey] = 5;
-  const second = visualOne.find(segment => Object.keys(table).filter(i => table[i] === undefined && visualOne.includes(i)));
-  table[second] = 2;
-
-  console.log("My last key should be", Object.keys(table).find(i => table[i] === undefined));
-  table[Object.keys(table).find(i => table[i] === undefined)] = 6;
+  table[Object.keys(table).find(i => table[i] === undefined && !visualFive.includes(i) && visualOne.includes(i))] = 2;
+  table[Object.keys(table).find(i => table[i] === undefined)] = 4;
 
   const areSameArray = (arr1, arr2) => {
     if (arr1.length !== arr2.length) {
@@ -210,23 +215,11 @@ const mapSignalsToSegments = (rawSignals) => {
   signals.forEach(signal => {
     // Find visual for each segment
     const visual = validGroups.findIndex((group) => areSameArray(signal.map(s => table[s]), group));
-    console.log("The visual for ", signal, "is", visual);
+    //console.log("The visual for ", signal, "is", visual);
     visualTable[visual] = signal.join('');
   });
 
-  console.log("One is represented by: ", visualOne);
-  console.log("Seven is represented by: ", visualSeven);
-  console.log("Now we know the table has: ", table);
-  console.log("Four is represented by: ", visualFour);
-  console.log(`Diff between seven ${visualSeven} and four ${visualFour} is`, diff);
-  console.log("So we are looking for a number with 5 segments with:", visualFour.concat(diff).sort((a, b) => a < b ? -1 : 1));
-  console.log("Three is represented by", visualThree);
-  console.log("Last part is", visualFive, unknownKey);
-  console.log("Second", second);
-  console.log("Now we know", table, visualTable)
-
   return Object.keys(visualTable).reduce((acc, e) => {
-    console.log("Here I am assigning", acc, e);
     acc[visualTable[e]] = e.toString();
 
     return acc;
