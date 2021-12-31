@@ -53,26 +53,34 @@ const findOutputForSignal = (signal) => {
   return NaN;
 };
 
+const standardizeSignals = map(pipe([
+  split(''),
+  sort,
+  join(''),
+]));
+
 const sortSignals = ([signals, outputs]) =>
   [
-    signals.map((value) => value.split('').sort((a, b) => a > b ? 1 : -1).join('')),
-    outputs.map((value) => value.split('').sort((a, b) => a > b ? 1 : -1).join('')),
+    standardizeSignals(signals),
+    standardizeSignals(outputs),
   ];
 
 const mapSignalsToSegments = (rawSignals) => {
-  console.log("The signals are ", rawSignals);
   const signals = rawSignals.map(signal => signal.split(''));
+
+  const signalOfLength = (length) => (signal) => signal.length === length;
+  const findSignalOfLength = (length) => signals.find(signalOfLength(length));
 
   const visualTable = {
     0: undefined,
-    1: signals.find(signal => signal.length === 2).join(''),
+    1: findSignalOfLength(2),
     2: undefined,
     3: undefined,
-    4: signals.find(signal => signal.length === 4).join(''),
+    4: findSignalOfLength(4),
     5: undefined,
     6: undefined,
-    7: signals.find(signal => signal.length === 3).join(''),
-    8: signals.find(signal => signal.length === 7).join(''),
+    7: findSignalOfLength(3),
+    8: findSignalOfLength(7),
     9: undefined,
   };
 
@@ -85,63 +93,6 @@ const mapSignalsToSegments = (rawSignals) => {
     f: undefined,
     g: undefined,
   };
-
-
-  // 128 bit number
-  // masks
-  // a/0: 0000001 => 1
-  // b/1: 0000010 => 2
-  // c/2: 0000100 => 4
-  // d/3: 0001000 => 8
-  // e/4: 0010000 => 16
-  // f/5: 0100000 => 32
-  // g/6: 1000000 => 64
-  // 
-  // conversions
-  // | visual | binary  | decimal |
-  // |--------+---------+---------|
-  // | 0      | 1110111 | 119     |
-  // | 1      | 0100100 | 36      |
-  // | 2      | 1011101 | 93      |
-  // | 3      | 1101101 | 109     |
-  // | 4      | 0101110 | 46      |
-  // | 5      | 1101011 | 107     |
-  // | 6      | 1111011 | 123     |
-  // | 7      | 0100101 | 37      |
-  // | 8      | 1111111 | 127     |
-  // | 9      | 1101111 | 111     |
-
-
-  // conversions
-  // | visual | binary  | decimal | qty |
-  // |--------+---------+---------+-----|
-  // | 0      | 1110111 | 119     | 6   |
-  // | 1      | 0100100 | 36      | 2   |
-  // | 2      | 1011101 | 93      | 5   |
-  // | 3      | 1101101 | 109     | 5   |
-  // | 4      | 0101110 | 46      | 4   |
-  // | 5      | 1101011 | 107     | 5   |
-  // | 6      | 1111011 | 123     | 6   |
-  // | 7      | 0100101 | 37      | 3   |
-  // | 8      | 1111111 | 127     | 7   |
-  // | 9      | 1101111 | 111     | 6   |
-
-  // conversions
-  // | visual | qty | 
-  // |--------+-----|
-  // | 1      | 2   | 
-  // | 7      | 3   |
-  // | 4      | 4   |
-  // | 2      | 5   |
-  // | 3      | 5   |
-  // | 5      | 5   |
-  // | 0      | 6   |
-  // | 6      | 6   |
-  // | 9      | 6   |
-  // | 8      | 7   |
-
-  // be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb
-  // acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf
 
   // conversions
   // | visual | qty | attempt                  | segments    | diff            | reveals                | known   |
@@ -171,31 +122,31 @@ const mapSignalsToSegments = (rawSignals) => {
   // We now know all values
 
   const unique = (arr) => Array.from(new Set(arr));
+  const hasEveryElementOf = (arr1) => (arr2) => arr2.every(el => arr1.includes(el));
+  const notInVisual = (visual, segment) => !visual.includes(segment);
 
-  const findSignalOfLength = (length) =>
-    signals.find(signal => signal.length === 2);
-  const visualOne = signals.find(signal => signal.length === 2);
-  const visualSeven = signals.find(signal => signal.length === 3);
+  const visualOne = findSignalOfLength(2);
+  const visualSeven = findSignalOfLength(3);
+  const visualFour = findSignalOfLength(4);
+
   table[visualSeven.find(el => !visualOne.includes(el))] = 0;
-  const visualFour = signals.find(signal => signal.length === 4);
-  const diff = visualFour.filter(el => !visualSeven.includes(el));
+
+  const segmentsOfFourNotInSeven = visualFour.filter(el => !visualSeven.includes(el));
 
   const visualThree = pipe([
-    filter(signal => signal.length === 5),
-    (candidates) => {
-      const potentialCombos = diff.map(segment => sort(unique(visualSeven.concat(segment))));
-
-      console.log("The combos are", potentialCombos);
-      console.log("The thing", candidates.find(candidate => potentialCombos.find(potential => potential.every(el => candidate.includes(el)))));
-      return candidates.find(candidate => potentialCombos.find(potential => potential.every(el => candidate.includes(el))));
-    },
-  ])(signals);
+    map((el) => visualSeven.concat(el)),
+    map(pipe([
+      unique,
+      sort,
+    ])),
+    reduce((acc, potential) => acc || signals.find((signal) => signal.length === 5 && potential.every(el => signal.includes(el))), 0),
+  ])(segmentsOfFourNotInSeven);
 
   visualTable[3] = visualThree.join('');
-  table[visualThree.find(segment => !visualFour.includes(segment) && !visualSeven.includes(segment))] = 6;
-  const intendedSegment = visualFour.find(segment => !visualThree.includes(segment));
+  table[visualThree.find(segment => notInVisual(visualFour, segment) && notInVisual(visualSeven, segment))] = 6;
+  const intendedSegment = visualFour.find(segment => notInVisual(visualThree, segment));
   table[intendedSegment] = 1;
-  table[diff.find(el => el !== intendedSegment)] = 3;
+  table[segmentsOfFourNotInSeven.find(el => el !== intendedSegment)] = 3;
   const allKnown = Object.keys(table).filter(i => table[i] !== undefined);
   const visualFive = signals.find((signal) => signal.length === 5 && allKnown.every(segment => signal.includes(segment)));
   visualTable[5] = visualFive.join('');
@@ -215,7 +166,6 @@ const mapSignalsToSegments = (rawSignals) => {
   signals.forEach(signal => {
     // Find visual for each segment
     const visual = validGroups.findIndex((group) => areSameArray(signal.map(s => table[s]), group));
-    //console.log("The visual for ", signal, "is", visual);
     visualTable[visual] = signal.join('');
   });
 
@@ -225,6 +175,7 @@ const mapSignalsToSegments = (rawSignals) => {
     return acc;
   }, {});
 };
+
 const part2 = () => {
   const calculate = pipe([
     parseInput,
@@ -232,7 +183,6 @@ const part2 = () => {
     map(sortSignals),
     //tap("Here are the sorted signals"),
     map(([signals, outputs]) => {
-      console.log("Mapping signals to segments");
       const visualTable = mapSignalsToSegments(signals);
 
       const lookupVisual = (signal) => visualTable[signal];
