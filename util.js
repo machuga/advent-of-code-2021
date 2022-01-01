@@ -24,11 +24,13 @@ module.exports.reduce = (fn, initial = []) => (arr) => arr.reduce(fn, initial);
 
 module.exports.find = (fn) => (arr) => arr.find(fn);
 
+module.exports.sum = (arr) => arr.reduce((acc, e) => acc + e, 0);
+
 module.exports.transpose = (array) => array[0].map((_, colIndex) => array.map(row => row[colIndex]));
 
 module.exports.zip = (a, b) => a.map((k, i) => [k, b[i]]);
 
-module.exports.sort = (arr) => arr.sort((a,b) => a < b ? -1 : 1);
+module.exports.sort = (arr) => arr.sort((a, b) => a < b ? -1 : 1);
 
 module.exports.tap = (str) => (value) => {
   console.log(str, value);
